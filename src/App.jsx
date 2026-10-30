@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import './App.css';
+import { QRCodeSVG } from 'qrcode.react';
 
 import frame1 from './assets/frame1.png';
 import frame2 from './assets/frame2.png';
@@ -7,7 +8,7 @@ import frame3 from './assets/frame3.png';
 import frame4 from './assets/frame4.png';
 
 export default function App() {
-  const [step, setStep] = useState('select');
+  const [step, setStep] = useState('select'); // 'select' | 'booth' | 'result'
   const [selectedFrame, setSelectedFrame] = useState(null);
   const [selectedFrameId, setSelectedFrameId] = useState(null);
   const [hoveredId, setHoveredId] = useState(null);
@@ -23,31 +24,30 @@ export default function App() {
     { id: 4, name: 'Cadre Lumpy Space Princess', src: frame4 },
   ];
 
-  // Coordonnées rectifiées pour s'arrêter net avant les décorations du bas
   const frameConfigs = {
     1: [
-      { top: '6.0%', left: '10.0%', width: '80%', height: '17.5%', borderRadius: '4px' },
-      { top: '25.5%', left: '10.0%', width: '80%', height: '17.5%', borderRadius: '4px' },
-      { top: '45.0%', left: '10.0%', width: '80%', height: '17.5%', borderRadius: '4px' },
-      { top: '64.5%', left: '10.0%', width: '80%', height: '17.5%', borderRadius: '4px' },
+      { top: '2.5%', left: '10.0%', width: '80%', height: '19.0%', borderRadius: '4px' },
+      { top: '22.5%', left: '10.0%', width: '80%', height: '19.0%', borderRadius: '4px' },
+      { top: '42.5%', left: '10.0%', width: '80%', height: '19.0%', borderRadius: '4px' },
+      { top: '63.0%', left: '10.0%', width: '80%', height: '19.0%', borderRadius: '4px' },
     ],
     2: [
-      { top: '8.5%', left: '10.0%', width: '80%', height: '16.5%', borderRadius: '16px' },
-      { top: '27.5%', left: '10.0%', width: '80%', height: '16.5%', borderRadius: '16px' },
-      { top: '46.5%', left: '10.0%', width: '80%', height: '16.5%', borderRadius: '16px' },
-      { top: '65.5%', left: '10.0%', width: '80%', height: '16.5%', borderRadius: '16px' },
+      { top: '2.5%', left: '10.0%', width: '81%', height: '19.0%', borderRadius: '4px' },
+      { top: '22.5%', left: '10.0%', width: '81%', height: '19.0%', borderRadius: '4px' },
+      { top: '42.5%', left: '10.0%', width: '81%', height: '19.0%', borderRadius: '4px' },
+      { top: '63.0%', left: '10.0%', width: '81%', height: '19.0%', borderRadius: '4px' },
     ],
     3: [
-      { top: '4.5%', left: '12.0%', width: '76%', height: '19.0%', borderRadius: '50% 50% 50% 50% / 40% 40% 60% 60%' },
-      { top: '24.5%', left: '12.0%', width: '76%', height: '19.0%', borderRadius: '50% 50% 50% 50% / 40% 40% 60% 60%' },
-      { top: '44.5%', left: '12.0%', width: '76%', height: '19.0%', borderRadius: '50% 50% 50% 50% / 40% 40% 60% 60%' },
-      { top: '64.5%', left: '12.0%', width: '76%', height: '19.0%', borderRadius: '50% 50% 50% 50% / 40% 40% 60% 60%' },
+      { top: '2.8%', left: '10.0%', width: '80%', height: '20.0%', borderRadius: '4px' },
+      { top: '23.5%', left: '10.0%', width: '80%', height: '20.0%', borderRadius: '4px' },
+      { top: '44.5%', left: '10.0%', width: '80%', height: '20.0%', borderRadius: '4px' },
+      { top: '65.0%', left: '10.0%', width: '80%', height: '20.0%', borderRadius: '4px' },
     ],
     4: [
-      { top: '5.0%', left: '10.0%', width: '80%', height: '17.5%', borderRadius: '50%' },
-      { top: '24.5%', left: '10.0%', width: '80%', height: '17.5%', borderRadius: '50%' },
-      { top: '44.0%', left: '10.0%', width: '80%', height: '17.5%', borderRadius: '50%' },
-      { top: '63.5%', left: '10.0%', width: '80%', height: '17.5%', borderRadius: '50%' },
+      { top: '2.0%', left: '10.0%', width: '80%', height: '20.0%', borderRadius: '4px' },
+      { top: '22.0%', left: '10.0%', width: '80%', height: '20.0%', borderRadius: '4px' },
+      { top: '42.0%', left: '10.0%', width: '80%', height: '20.0%', borderRadius: '4px' },
+      { top: '62.0%', left: '10.0%', width: '80%', height: '20.0%', borderRadius: '4px' },
     ]
   };
 
@@ -91,7 +91,15 @@ export default function App() {
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     
     const photoDataUrl = canvas.toDataURL('image/png');
-    setCapturedPhotos((prev) => [...prev, photoDataUrl]);
+    
+    setCapturedPhotos((prev) => {
+      const updated = [...prev, photoDataUrl];
+      if (updated.length === 4) {
+        // Passage direct à l'étape résultat sans bug de canvas
+        setTimeout(() => setStep('result'), 500);
+      }
+      return updated;
+    });
   };
 
   const currentSlots = frameConfigs[selectedFrameId] || frameConfigs[1];
@@ -99,6 +107,7 @@ export default function App() {
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#fef6e4', fontFamily: 'sans-serif', padding: '20px', textAlign: 'center' }}>
       
+      {/* 1. PAGE DE SELECTION */}
       {step === 'select' && (
         <div>
           <h1 style={{ color: '#ff5722', fontSize: '2.5rem', marginBottom: '30px' }}>
@@ -134,15 +143,7 @@ export default function App() {
                     overflow: 'hidden'
                   }}
                 >
-                  <img 
-                    src={frame.src} 
-                    alt={frame.name}
-                    style={{
-                      width: '100%',
-                      height: '100%',
-                      objectFit: 'contain'
-                    }}
-                  />
+                  <img src={frame.src} alt={frame.name} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
                 </div>
               );
             })}
@@ -150,6 +151,7 @@ export default function App() {
         </div>
       )}
 
+      {/* 2. PAGE PHOTO BOOTH */}
       {step === 'booth' && (
         <div>
           <button 
@@ -189,7 +191,6 @@ export default function App() {
               overflow: 'hidden',
               lineHeight: 0
             }}>
-              
               {currentSlots.map((slot, slotIndex) => (
                 <div 
                   key={slotIndex} 
@@ -209,33 +210,87 @@ export default function App() {
                   }}
                 >
                   {capturedPhotos[slotIndex] && (
-                    <img 
-                      src={capturedPhotos[slotIndex]} 
-                      alt={`prise ${slotIndex + 1}`} 
-                      style={{ 
-                        width: '100%', 
-                        height: '100%', 
-                        objectFit: 'cover' 
-                      }} 
-                    />
+                    <img src={capturedPhotos[slotIndex]} alt={`prise ${slotIndex + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   )}
                 </div>
               ))}
 
               {selectedFrame && (
-                <img 
-                  src={selectedFrame} 
-                  alt="Cadre selectionne" 
-                  style={{ 
-                    position: 'relative', 
-                    width: '100%', 
-                    height: 'auto', 
-                    display: 'block',
-                    pointerEvents: 'none',
-                    zIndex: 2
-                  }} 
-                />
+                <img src={selectedFrame} alt="Cadre selectionne" style={{ position: 'relative', width: '100%', height: 'auto', display: 'block', pointerEvents: 'none', zIndex: 2 }} />
               )}
+            </div>
+
+          </div>
+        </div>
+      )}
+
+      {/* 3. PAGE DE RESULTAT & QR CODE */}
+      {step === 'result' && (
+        <div>
+          <h2 style={{ color: '#4caf50', fontSize: '2.2rem' }}>Ta bande photo est prête ! 🎉</h2>
+          <p style={{ color: '#666', marginBottom: '30px' }}>Scanne le QR code pour retrouver ton expérience ou recommence une session.</p>
+
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '50px', flexWrap: 'wrap' }}>
+            
+            {/* Aperçu fidèle de la bande photo finale */}
+            <div style={{ 
+              position: 'relative', 
+              width: '220px', 
+              background: 'white', 
+              borderRadius: '12px', 
+              boxShadow: '0 4px 15px rgba(0,0,0,0.15)',
+              overflow: 'hidden',
+              lineHeight: 0
+            }}>
+              {currentSlots.map((slot, slotIndex) => (
+                <div 
+                  key={slotIndex} 
+                  style={{ 
+                    position: 'absolute',
+                    top: slot.top,
+                    left: slot.left,
+                    width: slot.width,
+                    height: slot.height,
+                    borderRadius: slot.borderRadius,
+                    background: '#eee',
+                    overflow: 'hidden',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    zIndex: 1
+                  }}
+                >
+                  {capturedPhotos[slotIndex] && (
+                    <img src={capturedPhotos[slotIndex]} alt={`prise ${slotIndex + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  )}
+                </div>
+              ))}
+
+              {selectedFrame && (
+                <img src={selectedFrame} alt="Cadre selectionne" style={{ position: 'relative', width: '100%', height: 'auto', display: 'block', pointerEvents: 'none', zIndex: 2 }} />
+              )}
+            </div>
+
+            {/* Zone QR Code et actions */}
+            <div style={{ background: 'white', padding: '30px', borderRadius: '15px', boxShadow: '0 4px 15px rgba(0,0,0,0.1)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px' }}>
+              
+              <div style={{ background: 'white', padding: '10px', borderRadius: '10px', border: '2px solid #eee' }}>
+                {/* QR Code pointant vers l'URL actuelle de l'application */}
+                <QRCodeSVG value={window.location.href} size={180} />
+              </div>
+
+              <div style={{ display: 'flex', gap: '15px', flexDirection: 'column', width: '100%' }}>
+                <button 
+                  onClick={() => {
+                    setStep('select');
+                    setCapturedPhotos([]);
+                  }}
+                  style={{ padding: '12px 25px', background: '#ff5722', color: 'white', border: 'none', borderRadius: '30px', fontWeight: 'bold', cursor: 'pointer', boxShadow: '0 4px 10px rgba(0,0,0,0.2)' }}
+                >
+                  Recommencer une session 🔄
+                </button>
+              </div>
+
             </div>
 
           </div>
